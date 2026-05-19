@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.iotguard.mapper.EnvDataMapper">
+    <resultMap id="BaseResultMap" type="com.iotguard.entity.EnvData">
+        <id column="id" property="id"/>
+        <result column="device_id" property="deviceId"/>
+        <result column="device_code" property="deviceCode"/>
+        <result column="temperature" property="temperature"/>
+        <result column="humidity" property="humidity"/>
+        <result column="light" property="light"/>
+        <result column="smoke" property="smoke"/>
+        <result column="collect_time" property="collectTime"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.iotguard.entity.EnvData" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO env_data(device_id, device_code, temperature, humidity, light, smoke, collect_time)
+        VALUES(#{deviceId}, #{deviceCode}, #{temperature}, #{humidity}, #{light}, #{smoke}, #{collectTime})
+    </insert>
+
+    <select id="findByDeviceId" resultMap="BaseResultMap">
+        SELECT * FROM env_data WHERE device_id = #{deviceId}
+        <if test="startTime != null and startTime != ''">
+            AND collect_time &gt;= #{startTime}
+        </if>
+        <if test="endTime != null and endTime != ''">
+            AND collect_time &lt;= #{endTime}
+        </if>
+        ORDER BY collect_time DESC
+    </select>
+
+    <select id="findLatestByDeviceId" resultMap="BaseResultMap">
+        SELECT * FROM env_data WHERE device_id = #{deviceId} ORDER BY collect_time DESC LIMIT 1
+    </select>
+
+    <select id="findByPage" resultMap="BaseResultMap">
+        SELECT * FROM env_data
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND device_code LIKE CONCAT('%',#{keyword},'%')
+            </if>
+        </where>
+        ORDER BY collect_time DESC
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <select id="countAll" resultType="long">
+        SELECT COUNT(*) FROM env_data
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND device_code LIKE CONCAT('%',#{keyword},'%')
+            </if>
+        </where>
+    </select>
+
+    <select id="countToday" resultType="long">
+        SELECT COUNT(*) FROM env_data WHERE DATE(collect_time) = CURDATE()
+    </select>
+
+    <select id="avgTemperatureToday" resultType="java.lang.Double">
+        SELECT AVG(temperature) FROM env_data WHERE DATE(collect_time) = CURDATE()
+    </select>
+
+    <select id="avgHumidityToday" resultType="java.lang.Double">
+        SELECT AVG(humidity) FROM env_data WHERE DATE(collect_time) = CURDATE()
+    </select>
+
+    <select id="hourlyStatsToday" resultType="java.util.HashMap">
+        SELECT HOUR(collect_time) as hour,
+               AVG(temperature) as avg_temp,
+               AVG(humidity) as avg_humidity
+        FROM env_data
+        WHERE DATE(collect_time) = CURDATE()
+        GROUP BY HOUR(collect_time)
+        ORDER BY hour
+    </select>
+</mapper>

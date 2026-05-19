@@ -1,0 +1,22 @@
+# Node
+node_modules/
+iot-frontend/dist/
+
+# Java / Maven
+iot-backend/target/
+*.class
+*.jar
+*.war
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.local

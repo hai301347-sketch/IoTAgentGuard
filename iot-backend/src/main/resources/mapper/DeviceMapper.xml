@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.iotguard.mapper.DeviceMapper">
+    <resultMap id="BaseResultMap" type="com.iotguard.entity.Device">
+        <id column="id" property="id"/>
+        <result column="device_name" property="deviceName"/>
+        <result column="device_code" property="deviceCode"/>
+        <result column="device_type" property="deviceType"/>
+        <result column="location" property="location"/>
+        <result column="status" property="status"/>
+        <result column="description" property="description"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <select id="findById" resultMap="BaseResultMap">
+        SELECT * FROM iot_device WHERE id = #{id}
+    </select>
+
+    <select id="findByCode" resultMap="BaseResultMap">
+        SELECT * FROM iot_device WHERE device_code = #{deviceCode}
+    </select>
+
+    <select id="findAll" resultMap="BaseResultMap">
+        SELECT * FROM iot_device ORDER BY create_time DESC
+    </select>
+
+    <select id="findByPage" resultMap="BaseResultMap">
+        SELECT * FROM iot_device
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (device_name LIKE CONCAT('%',#{keyword},'%') OR device_code LIKE CONCAT('%',#{keyword},'%'))
+            </if>
+        </where>
+        ORDER BY create_time DESC
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <select id="countAll" resultType="long">
+        SELECT COUNT(*) FROM iot_device
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (device_name LIKE CONCAT('%',#{keyword},'%') OR device_code LIKE CONCAT('%',#{keyword},'%'))
+            </if>
+        </where>
+    </select>
+
+    <select id="countOnline" resultType="long">
+        SELECT COUNT(*) FROM iot_device WHERE status = 'ONLINE'
+    </select>
+
+    <insert id="insert" parameterType="com.iotguard.entity.Device" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO iot_device(device_name, device_code, device_type, location, status, description)
+        VALUES(#{deviceName}, #{deviceCode}, #{deviceType}, #{location}, #{status}, #{description})
+    </insert>
+
+    <update id="update" parameterType="com.iotguard.entity.Device">
+        UPDATE iot_device
+        <set>
+            <if test="deviceName != null">device_name = #{deviceName},</if>
+            <if test="deviceType != null">device_type = #{deviceType},</if>
+            <if test="location != null">location = #{location},</if>
+            <if test="description != null">description = #{description},</if>
+            update_time = NOW()
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateStatus">
+        UPDATE iot_device SET status = #{status}, update_time = NOW() WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM iot_device WHERE id = #{id}
+    </delete>
+</mapper>
